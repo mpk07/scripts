@@ -1,0 +1,7 @@
+brightness=0
+read brightness
+if [ $brightness -gt 0 ]; then
+	su -c "echo $brightness > /sys/class/backlight/acpi_video0/brightness"
+else
+	echo Brightness value is too low!
+fi
