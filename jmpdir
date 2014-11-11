@@ -1,0 +1,122 @@
+#!/bin/bash
+# Programs must be written for people to read, and only incidentally for machines to execute.
+
+#---------------------------------------------------------------------------------------------#
+# This script is a substitute to the combo of pushd, popd and dirs +N.                        #
+# A .dirlist is used to store whatever new directory is visited.                              #
+# This directory is associated with a number.                                                 #
+# Whenever a cd to a directory is required, use the number to jump to it.                     #
+#                                                                                             #
+#---------------------------------------------------------------------------------------------#
+
+warning() {
+    read response
+    if [ "$response" = "y" -o "$response" = "Y" ]; then
+        sed -i '/^/d' ~/.dirlist
+    fi
+}
+
+#touching
+touch ~/.dirlist
+#helping
+if [ "$1" = "--help" -o "$1" = "-h" ]; then
+    echo "General Info:"
+    echo "              The 'jd' utility is much like the 'cd' utility which all shells offer"
+    echo "              but with some more additional features which are described in short in the following lines."
+    echo "              The utility maintains a history of all directories visited and facilitates faster navigation"
+    echo "              between directories. Additionally, the user has complete control over the history."
+    echo "              The user can delete/add any directory at the his/her will."
+    echo ""
+    echo "Usage:"
+    echo "      1) Adding"
+    echo ""
+    echo "        * 'jda' to add the current directory to the list"
+    echo "        * 'jd <directory_name>' to jump to the directory 'directory_name' in the current folder and add it to the list"
+    echo ""
+    echo "      2) Removal"
+    echo ""
+    echo "        * 'jdr' OR 'jd -r' to remove the current directory from the list"
+    echo "        * 'jdr <number>' OR 'jd -r <number>' to remove a directory with that serial number in the list"
+    echo ""
+    echo "      3) Navigation"
+    echo ""
+    echo "        * 'jdj <number>' OR 'jd -j <number>' to jump to a directory with that serial number in the list"
+    echo "        * 'jd <directory_name>' to jump to a directory in the current folder"
+    echo "        * 'jd -' to go to the previous directory visited in the list"
+    echo ""
+    echo "      4) Display"
+    echo ""
+    echo "        * 'jdl' OR 'jd -l' to list the directories visited"
+    echo ""
+    echo "      5) Search"
+    echo ""
+    echo "        * 'jds' OR 'jd -s' to search a directory"
+    echo "        * Input a pattern which can be grepped"
+    echo ""
+#clearing
+elif [ "$1" = "--clear" ]; then 
+    echo "Do you wish to clear the list? [y/n]"
+    warning
+#jumping
+elif [ "$1" = "-j" ]; then
+    prev=`pwd`
+    temp=`awk -v f2=$2 'BEGIN{comp=f2} {if (NR == comp) print}' ~/.dirlist`
+    if [ "$temp" = "" ]; then
+        echo "Directory not available."
+    else
+        cd $temp
+    fi
+    pwd
+#removing
+elif [ "$1" = "-r" ]; then
+    if [ $# == 1 ]; then
+        curr=`pwd`
+        record=`grep -n "$curr\$" ~/.dirlist | awk -F: '{print $1}'`
+        sed -i "${record} d" ~/.dirlist
+    elif [ $# == 2 ]; then
+        temp=`awk -v f2=$2 'BEGIN{comp=f2} {if (NR == comp) print}' ~/.dirlist`
+        if [ "$temp" = "" ]; then
+            echo "Directory not available."
+        else
+            sed -i "${2} d" ~/.dirlist
+        fi
+    fi
+#listing
+elif [ "$1" = "-l" ]; then
+    lines=`wc -l ~/.dirlist | awk '{print $1}'`
+
+    if [ $lines == 0 ]; then
+        echo "Directory list is empty"
+        echo ""
+    else
+        cat -n ~/.dirlist | less
+    fi
+#preving
+elif [ "$1" = "-" ]; then
+   next=`pwd`
+   cd $prev
+   prev=$next
+   pwd
+#searching
+elif [ "$1" = "-s" ]; then
+   no_records=`cat ~/.dirlist | /bin/grep -n $2 | wc -l`
+	if [ $no_records == 1 ]; then
+		prev=`pwd`
+		cd `cat ~/.dirlist | /bin/grep $2`
+	else
+		cat ~/.dirlist | /bin/grep -n $2
+	fi
+#adding
+else
+    prev=`pwd`
+    if [ $# == 0 ]; then
+        cd ~
+    else
+        cd $1
+    fi
+    curr=`pwd`
+    grep "$curr\$" ~/.dirlist > /dev/null 
+    if [ $? == 1 ]; then
+        pwd >> ~/.dirlist
+    fi
+fi
