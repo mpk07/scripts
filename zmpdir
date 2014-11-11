@@ -52,6 +52,7 @@ if [ "$1" = "--help" -o "$1" = "-h" ]; then
     echo ""
     echo "        * 'jds' OR 'jd -s' to search a directory"
     echo "        * Input a pattern which can be grepped"
+    echo "        * If only a single search result, you will be jumped to that dir"
     echo ""
 #clearing
 elif [ "$1" = "--clear" ]; then 
