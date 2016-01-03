@@ -90,7 +90,11 @@ elif [ "$1" = "-l" ]; then
         echo "Directory list is empty"
         echo ""
     else
-        cat -n ~/.dirlist | less
+       if [ $# = 2 ]; then
+          cat -n ~/.dirlist | /bin/grep $2
+       else # if [ $# == 1 ];
+          cat -n ~/.dirlist | less
+       fi
     fi
 #preving
 elif [ "$1" = "-" ]; then
@@ -100,14 +104,30 @@ elif [ "$1" = "-" ]; then
    pwd
 #searching
 elif [ "$1" = "-s" ]; then
-   no_records=`cat ~/.dirlist | /bin/grep -n $2 | wc -l`
-	if [ $no_records = 1 ]; then
-		prev=`pwd`
-		cd `cat ~/.dirlist | /bin/grep $2`
-		echo `pwd`
-	else
-		cat ~/.dirlist | /bin/grep -n $2
-	fi
+   # searching when you know two substrings
+   if [ $# = 3 ]; then
+      no_records=`cat ~/.dirlist | /bin/grep -n $2 | /bin/grep $3 | wc -l`
+      if [ $no_records = 1 ]; then
+         prev=`pwd`
+         cd `cat ~/.dirlist | /bin/grep $2 | /bin/grep $3`
+         pwd
+      elif [ $no_records = 0 ]; then
+         echo "No match found"
+      else
+         cat ~/.dirlist | /bin/grep -n $2 | /bin/grep $3
+      fi
+   else # searching when you know one substring
+      no_records=`cat ~/.dirlist | /bin/grep -n $2 | wc -l`
+      if [ $no_records = 1 ]; then
+         prev=`pwd`
+         cd `cat ~/.dirlist | /bin/grep $2`
+         pwd
+      elif [ $no_records = 0 ]; then
+         echo "No match found"
+      else
+         cat ~/.dirlist | /bin/grep -n $2
+      fi
+   fi
 #adding
 else
     prev=`pwd`
